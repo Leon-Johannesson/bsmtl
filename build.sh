@@ -6,3 +6,4 @@ gcc -std=c11 -Wall -Wextra -Wpedantic -Werror -fobjc-arc \
     -framework MetalKit \
     -framework QuartzCore \
     *.m -o metal-test
+./metal-test

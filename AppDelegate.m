@@ -10,6 +10,8 @@ typedef struct {
     vector_float4 color;
 } VertexIn;
 
+int indices[] = {0, 1, 2, 1, 2, 3};
+
 static const VertexIn vertexData[] =
 {
     { { 0.5, -0.5, 0.0, 1.0}, {1.0, 0.0, 0.0, 1.0} },
@@ -20,17 +22,7 @@ static const VertexIn vertexData[] =
     { {-0.5,  0.5, 0.0, 1.0}, {0.0, 0.0, 1.0, 1.0} }
 };
 
-static matrix_float4x4 rotationMatrix2D(float radians)
-{
-    float cos = cosf(radians);
-    float sin = sinf(radians);
-    return (matrix_float4x4) {
-        .columns[0] = {  cos, sin, 0, 0 },
-        .columns[1] = { -sin, cos, 0, 0 },
-        .columns[2] = {    0,   0, 1, 0 },
-        .columns[3] = {    0,   0, 0, 1 }
-    };
-}
+
 
 @implementation AppDelegate
 
@@ -85,7 +77,7 @@ static matrix_float4x4 rotationMatrix2D(float radians)
     if(!_pipelineState) {
         [NSException raise:@"Failed to create pipeline state" format:@"%@", [error localizedDescription]];
     }
-
+    
     /*
      * Metal setup: Vertices
      */
@@ -98,6 +90,13 @@ static matrix_float4x4 rotationMatrix2D(float radians)
      */
     _uniformBuffer = [_device newBufferWithLength:sizeof(Uniforms)
         options:MTLResourceCPUCacheModeWriteCombined];
+
+    /*
+     * Metal setup: Indices
+     */
+    _indexBuffer = [_device newBufferWithBytes:indices
+        length:sizeof(indices)
+        options:MTLResourceStorageModePrivate];
 
     /*
      * Metal setup: Command queue
@@ -122,13 +121,6 @@ static matrix_float4x4 rotationMatrix2D(float radians)
 
 - (void)drawInMTKView:(MTKView*)view
 {
-    double rotationAngle = fmod(CACurrentMediaTime(), 2.0 * M_PI);
-    void* uniformSrc = &(Uniforms) {
-        .rotationMatrix = rotationMatrix2D(rotationAngle)
-    };
-    void* uniformTgt = [_uniformBuffer contents];
-    memcpy(uniformTgt, uniformSrc, sizeof(Uniforms));
-
     MTLRenderPassDescriptor* passDescriptor = [view currentRenderPassDescriptor];
     id<CAMetalDrawable> drawable = [view currentDrawable];
     id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
@@ -137,7 +129,10 @@ static matrix_float4x4 rotationMatrix2D(float radians)
     [commandEncoder setRenderPipelineState:_pipelineState];
     [commandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
     [commandEncoder setVertexBuffer:_uniformBuffer offset:0 atIndex:1];
-    [commandEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+    [commandEncoder setVertexBuffer:_indexBuffer offset:0 atIndex:2];
+    [commandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6
+                    indexType:MTLIndexTypeUInt16 indexBuffer:_indexBuffer indexBufferOffset:0 
+                    instanceCount:1];
     [commandEncoder endEncoding];
     [commandBuffer presentDrawable:drawable];
     [commandBuffer commit];

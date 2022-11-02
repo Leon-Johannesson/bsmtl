@@ -24,7 +24,7 @@ vertex VertexOut vertexFunction(device VertexIn *vertices [[buffer(0)]],
         uint vid [[vertex_id]])
 {
     VertexOut out;
-    out.position = uniforms.rotationMatrix * vertices[vid].position;
+    out.position = vertices[vid].position;
     out.color = vertices[vid].color;
     return out;
 }

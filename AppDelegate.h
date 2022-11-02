@@ -8,6 +8,7 @@
     id<MTLRenderPipelineState> _pipelineState;
     id<MTLBuffer> _vertexBuffer;
     id<MTLBuffer> _uniformBuffer;
+    id<MTLBuffer> _indexBuffer;
     id<MTLCommandQueue> _commandQueue;
 }
 @end
