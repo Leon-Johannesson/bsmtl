@@ -10,19 +10,24 @@ typedef struct {
     vector_float4 color;
 } VertexIn;
 
-int indices[] = {0, 1, 2, 1, 2, 3};
+int indices[] = {0, 1, 2, 0, 2, 3};
 
 static const VertexIn vertexData[] =
 {
     { { 0.5, -0.5, 0.0, 1.0}, {1.0, 0.0, 0.0, 1.0} },
     { {-0.5, -0.5, 0.0, 1.0}, {0.0, 1.0, 0.0, 1.0} },
     { {-0.5,  0.5, 0.0, 1.0}, {0.0, 0.0, 1.0, 1.0} },
-    { { 0.5,  0.5, 0.0, 1.0}, {1.0, 1.0, 0.0, 1.0} },
-    { { 0.5, -0.5, 0.0, 1.0}, {1.0, 0.0, 0.0, 1.0} },
-    { {-0.5,  0.5, 0.0, 1.0}, {0.0, 0.0, 1.0, 1.0} }
+    { { 0.5,  0.5, 0.0, 1.0}, {1.0, 1.0, 0.0, 1.0} }
 };
 
-
+func MlOrth(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float) -> float4x4 {
+    return float4x4(
+        [ 2 / (right - left), 0, 0, 0],
+        [0, 2 / (top - bottom), 0, 0],
+        [0, 0, 1 / (far - near), 0],
+        [(left + right) / (left - right), (top + bottom) / (bottom - top), near / (near - far), 1]
+    ) 
+}
 
 @implementation AppDelegate
 
@@ -130,9 +135,9 @@ static const VertexIn vertexData[] =
     [commandEncoder setVertexBuffer:_vertexBuffer offset:0 atIndex:0];
     [commandEncoder setVertexBuffer:_uniformBuffer offset:0 atIndex:1];
     [commandEncoder setVertexBuffer:_indexBuffer offset:0 atIndex:2];
-    [commandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:6
-                    indexType:MTLIndexTypeUInt16 indexBuffer:_indexBuffer indexBufferOffset:0 
-                    instanceCount:1];
+    [commandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle indexCount:_indexBuffer.length
+                    indexType:MTLIndexTypeUInt32 indexBuffer:_indexBuffer indexBufferOffset:0];
+    //printf("%d\n", (int)_indexBuffer.length);
     [commandEncoder endEncoding];
     [commandBuffer presentDrawable:drawable];
     [commandBuffer commit];
